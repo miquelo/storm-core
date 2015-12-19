@@ -54,7 +54,7 @@ setup(
 	url="http://pypi.python.org/pypi/storm_core_0.1.0/",
 	
 	license="LICENSE.txt",
-	description="STROM Core providers.",
+	description="STORM Core providers.",
 	long_description=open("README.md").read()
 )
 
