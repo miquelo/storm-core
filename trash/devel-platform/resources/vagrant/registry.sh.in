@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# DOCS
+# https://docs.docker.com/registry/deploying/
+
+# Registry certificate creation
+mkdir -p /var/keys
+mkdir -p /vagrant/certs
+openssl req \
+	-newkey rsa:4096 \
+	-nodes \
+	-sha256 \
+	-keyout /var/keys/docker-registry.key \
+	-x509 \
+	-days 365 \
+	-out /vagrant/certs/docker-registry.crt \
+	-subj "/C=#{registry_cert['country']}/L=#{registry_cert['locality']}/O=#{registry_cert['organization']}/CN=#{domain_docker}"
+
+docker run -d \
+	-p #{docker_registry_port}:#{docker_registry_port} \
+    -v /var/lib/registry:/var/lib/registry \
+	-v /var/keys:/var/keys \
+	-v /vagrant/certs:/var/certs \
+	-e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
+	-e REGISTRY_HTTP_TLS_CERTIFICATE=/var/certs/docker-registry.crt \
+	-e REGISTRY_HTTP_TLS_KEY=/var/keys/docker-registry.key \
+	--restart=always --name registry \
+	registry:2.0.1
+

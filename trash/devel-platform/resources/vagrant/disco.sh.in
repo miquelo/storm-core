@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd /tmp/disco
+docker build -t #{project}/disco .
+rm -rf /tmp/disco
+
+cd
+mkdir -p /var/lib/disco
+
+docker run -d \
+	--restart=always --name disco \
+	#{project}/disco
+

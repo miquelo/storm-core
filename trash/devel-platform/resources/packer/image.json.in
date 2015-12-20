@@ -1,0 +1,78 @@
+{
+	"variables": {
+		"debian_version": "#{debian_version}",
+		"iso_checksum": "#{debian_iso_checksum}",
+		"iso_checksum_type": "#{debian_iso_checksum_type}"
+	},
+	"builders": [
+		{
+			"type": "virtualbox-iso",
+			"boot_command": [
+				"<esc><wait>",
+				"install <wait>",
+				"preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg <wait>",
+				"debian-installer=en_US <wait>",
+				"auto <wait>",
+				"locale=en_US <wait>",
+				"kbd-chooser/method=us <wait>",
+				"keyboard-configuration/xkb-keymap=us <wait>",
+				"netcfg/get_hostname={{.Name}} <wait>",
+				"netcfg/get_domain=vagrantup.com <wait>",
+				"fb=false <wait>",
+				"debconf/frontend=noninteractive <wait>",
+				"console-setup/ask_detect=false <wait>",
+				"console-keymaps-at/keymap=us <wait>",
+				"<enter><wait>"
+			],
+			"boot_wait": "10s",
+			"disk_size": 32768,
+			"guest_os_type": "Debian_64",
+			"headless": true,
+			"http_directory": "http",
+			"iso_checksum": "{{user `iso_checksum`}}",
+			"iso_checksum_type": "{{user `iso_checksum_type`}}",
+			"iso_url": "http://cdimage.debian.org/cdimage/release/{{user `debian_version`}}/amd64/iso-cd/debian-{{user `debian_version`}}-amd64-netinst.iso",
+			"ssh_username": "#{admin_user}",
+			"ssh_password": "#{admin_user}",
+			"ssh_port": 22,
+			"ssh_wait_timeout": "1200s",
+			"shutdown_command": "echo '#{admin_user}' | sudo -S /sbin/shutdown -hP now",
+			"guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+			"virtualbox_version_file": ".vbox_version",
+			"vm_name": "debian-{{user `debian_version`}}-amd64",
+			"vboxmanage": [
+				[ "modifyvm", "{{.Name}}", "--memory", "256" ],
+				[ "modifyvm", "{{.Name}}", "--cpus", "1" ]
+			]
+		}
+	],
+	"post-processors": [
+		{
+			"type": "vagrant",
+			"compression_level": "9",
+			"output": "debian-{{user `debian_version`}}-amd64_{{.Provider}}.box",
+			"only": ["virtualbox-iso"]
+		}
+	],
+	"provisioners": [
+		{
+			"type": "shell",
+			"environment_vars": [
+				"ADMIN_NAME=#{admin_user}"
+			],
+			"execute_command": "echo '#{admin_user}' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+			"scripts": [
+				"script/update.sh",
+				"script/sshd.sh",
+				"script/networking.sh",
+				"script/sudoers.sh",
+				"script/vagrant.sh",
+				"script/docker.sh",
+				"script/vbaddguest.sh",
+				"script/cleanup.sh"
+			],
+			"only": ["virtualbox-iso"]
+		}
+	]
+}
+

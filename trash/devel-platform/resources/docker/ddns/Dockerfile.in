@@ -1,0 +1,13 @@
+FROM debian:latest
+
+RUN ["apt-get", "update", "-y"]
+
+RUN ["mkdir", "-p", "/tmp/ddns"]
+ADD ["install.sh", "/tmp/ddns/install.sh"]
+ADD ["bind/", "/tmp/ddns/bind/"]
+ADD ["web/", "/tmp/ddns/web/"]
+RUN ["sh", "/tmp/ddns/install.sh"]
+RUN ["rm", "-rf", "/tmp/ddns/"]
+
+CMD ["/usr/bin/supervisord", "-n"]
+

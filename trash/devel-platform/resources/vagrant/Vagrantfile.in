@@ -1,0 +1,39 @@
+#!/usr/bin/ruby -w
+
+VAGRANTFILE_VERSION=2
+SUPPORT_IP="#{support_ip}"
+PACKER_DIR="#{packer_dir}"
+DOCKER_DIR="#{docker_dir}"
+
+Vagrant.configure(VAGRANTFILE_VERSION) do |config|
+	
+	config.vm.provision "shell", path: "fix-stdin.sh"
+	config.vm.synced_folder "vagrant", "/vagrant", create: true
+	
+	config.vm.define "support", autostart: true do |instance|
+		instance.vm.hostname = "support"
+		instance.vm.box = "#{box_name}"
+		instance.vm.box_url = "file://##{PACKER_DIR}/debian-#{debian_version}-amd64_virtualbox.box"
+		instance.vm.network "private_network", ip: "##{SUPPORT_IP}"
+		instance.vm.provision "shell", inline: "echo -e \"nameserver 127.0.0.1\\n$(cat /etc/resolv.conf)\" > /etc/resolv.conf"
+		instance.vm.provision "file", source: "##{DOCKER_DIR}/ddns", destination: "/tmp"
+		instance.vm.provision "file", source: "##{DOCKER_DIR}/disco", destination: "/tmp"
+		instance.vm.provision "shell", path: "ddns.sh"
+		instance.vm.provision "shell", path: "disco.sh"
+		instance.vm.provision "shell", path: "registry.sh"
+		instance.vm.provision "shell", path: "trust-registry.sh"
+	end
+	
+	config.vm.define "executor01", autostart: true do |instance|
+		instance.vm.hostname = "executor01"
+		instance.vm.box = "#{box_name}"
+		instance.vm.box_url = "file://##{PACKER_DIR}/debian-8.1.0-amd64-devel_virtualbox.box"
+		instance.vm.network "private_network", type: "dhcp"
+		instance.vm.provision "shell", inline: "echo -e \"nameserver ##{SUPPORT_IP}\\n$(cat /etc/resolv.conf)\" > /etc/resolv.conf"
+		instance.vm.provision "shell", path: "domainup.sh"
+		instance.vm.provision "shell", path: "trust-registry.sh"
+		# instance.vm.synced_folder ...
+	end
+	
+end
+

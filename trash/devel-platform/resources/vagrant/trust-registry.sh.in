@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir -p /etc/docker/certs.d/#{domain_docker}:#{docker_registry_port}/
+ln -s -T \
+	/vagrant/certs/docker-registry.crt \
+	/etc/docker/certs.d/#{domain_docker}:#{docker_registry_port}/ca.crt
+	
+service docker restart
+

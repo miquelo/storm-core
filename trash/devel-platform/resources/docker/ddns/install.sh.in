@@ -1,0 +1,42 @@
+#!/bin/bash
+
+apt-get install -y \
+	bind9 \
+	dnsutils \
+	apache2 \
+	php5-common \
+	libapache2-mod-php5 \
+	supervisor
+
+# dnssec-keygen -a HMAC-MD5 -b 512 -n USER ns-ddns_rndc-key
+# Not possible. Not enough entropy :(
+cp /etc/bind/rndc.key /etc/bind/ns-ddns_rndc.key
+cp -f /tmp/ddns/bind/named.* /etc/bind/
+cp /tmp/ddns/bind/zones.conf /var/lib/bind/
+
+mkdir -p /var/log/bind
+chown bind /var/log/bind
+
+a2enmod php5 rewrite
+a2dissite 000-default
+
+mkdir -p /var/www/ddns
+cp /tmp/ddns/web/site.conf /etc/apache2/sites-available/ddns.conf
+cp /tmp/ddns/web/*.php /var/www/ddns/
+a2ensite ddns
+
+usermod -a -G bind www-data
+
+# Configuring supervisor for 'bind9' and 'apache2'
+# https://docs.docker.com/articles/using_supervisord/
+
+echo "[program:apache2]
+command=/bin/bash -c \"source /etc/apache2/envvars && exec /usr/sbin/apache2 \
+-DFOREGROUND\"
+" > /etc/supervisor/conf.d/apache2.conf
+
+echo "[program:bind9]
+command=/bin/bash -c \"chown bind -R /var/lib/bind && /usr/sbin/named \
+-f -u bind\"
+" > /etc/supervisor/conf.d/bind9.conf
+

@@ -1,0 +1,37 @@
+<?php
+$nsupdate = '/usr/bin/nsupdate -k /etc/bind/ns-ddns_rndc.key';
+
+header('Content-Type: text/plain; charset=UTF-8');
+
+switch ($_SERVER['REQUEST_METHOD'])
+{
+	case 'POST':
+	$zone = $_POST['zone'];
+	$name = $_POST['name'];
+	$ip = $_POST['ip'];
+
+	$data = "<< EOF\n" .
+	"server localhost\n" .
+	"zone $zone\n" .
+	"update delete $name.$zone A\n" .
+	"update add $name.$zone 300 A $ip\n" .
+	"send\n" .
+	"EOF\n";
+	exec("$nsupdate $data", $cmdout, $ret);
+	break;
+	
+	case 'DELETE':
+	$zone = $_DELETE['zone'];
+	$name = $_DELETE['name'];
+
+	$data = "<< EOF\n" .
+	"server localhost\n" .
+	"zone $zone\n" .
+	"update delete $name.$zone A\n" .
+	"send\n" .
+	"EOF\n";
+	exec("$nsupdate $data", $cmdout, $ret);
+	break;
+}
+?>
+

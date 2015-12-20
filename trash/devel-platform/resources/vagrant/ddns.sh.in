@@ -1,0 +1,59 @@
+#!/bin/bash
+
+mkdir -p /var/lib/ddns/bind
+
+echo "
+zone \"#{domain}\" {
+	type master;
+	file \"/var/lib/bind/db.#{domain}\";
+	allow-update { key rndc-key; };
+};
+zone \"#{str.join('.', [v for i, v in enumerate(reversed(support_ip.rsplit('.'))) if i > 0])}.in-addr.arpa\" {
+	type master;
+	file \"/var/lib/bind/db.#{domain}.inv\";
+	allow-update { key rndc-key; };
+};
+" >> /var/lib/ddns/bind/zones.conf
+
+echo "\$TTL	3600
+@               IN      SOA     #{domain_ns}. root.#{domain}. (
+    2007010401  ; Serial
+    3600        ; Refresh [1h]
+    600         ; Retry   [10m]
+    86400       ; Expire  [1d]
+    600         ; Negative Cache TTL [1h]
+);
+
+@               IN      NS      #{domain_ns}.
+@               IN      MX      #{support_ip.rsplit('.')[-1]} #{domain_ns}.
+
+ns              IN      A       #{support_ip}
+
+disco           IN      CNAME   #{domain_ns.replace('.{}'.format(domain), '')}
+docker          IN      CNAME   #{domain_ns.replace('.{}'.format(domain), '')}
+" > /var/lib/ddns/bind/db.#{domain}
+
+echo "@               IN      SOA     #{domain_ns}. root.#{domain}. (
+    2007010401  ; Serial
+    3600        ; Refresh [1h]
+    600         ; Retry   [10m]
+    86400       ; Expire  [1d]
+    600         ; Negative Cache TTL [1h]
+);
+
+@               IN      NS      #{domain_ns}.
+
+2               IN      PTR     #{domain_ns}.
+" > /var/lib/ddns/bind/db.#{domain}.inv
+
+cd /tmp/ddns
+docker build -t #{project}/ddns .
+rm -rf /tmp/ddns
+
+docker run -d \
+	-p 80:80 \
+	-p 53:53/udp \
+	-v /var/lib/ddns/bind:/var/lib/bind \
+	--restart=always --name ddns \
+	#{project}/ddns
+
