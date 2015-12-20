@@ -43,18 +43,24 @@ setup(
 	extras_require={
 		"shell-color": [
 			"colorama>=0.3.3"
+		],
+		"gtk": [
+			"gi>=3.0"
 		]
 	},
 	
 	entry_points={
 		"console_scripts": [
 			"storm=storm.application.shell:main"
+		],
+		"gui_scripts": [
+			"storm-gtk=storm.application.gtk:main"
 		]
 	},
 	url="http://pypi.python.org/pypi/storm_core_0.1.0/",
 	
 	license="LICENSE.txt",
-	description="STORM Core providers.",
+	description="STORM core applications and providers.",
 	long_description=open("README.md").read()
 )
 
