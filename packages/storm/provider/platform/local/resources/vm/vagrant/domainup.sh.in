@@ -1,0 +1,45 @@
+#!/bin/bash
+
+echo "#!/bin/bash
+DOMAINUP_IP=\$(sh -c \"ip addr | awk '/inet/ && /\${DOMAINUP_IFACE}/\
+{sub(/\/.*\$/,\\\"\\\",\\\$2); print \\\$2}'\")
+curl --data \"\
+zone=\${DOMAINUP_ZONE}&\
+name=\${DOMAINUP_NAME}&\
+ip=\${DOMAINUP_IP}\" \
+http://\${DOMAINUP_NS}/domain
+" > /usr/bin/domainup-post.sh
+chmod +x /usr/bin/domainup-post.sh
+
+echo "#!/bin/bash
+curl -X DELETE \
+http://\${DOMAINUP_NS}/domain?\
+zone=\${DOMAINUP_ZONE}&\
+name=\${DOMAINUP_NAME}
+" > /usr/bin/domainup-delete.sh
+chmod +x /usr/bin/domainup-delete.sh
+
+echo "[Unit]
+Description=Domain Update Service
+
+[Service]
+EnvironmentFile=/etc/default/domainup
+ExecStart=/usr/bin/domainup-post.sh
+ExecStop=/usr/bin/domainup-delete.sh
+
+[Install]
+WantedBy=multi-user.target
+" > /etc/systemd/system/domainup.service
+
+echo "DOMAINUP_NS=#{domain_ns}
+DOMAINUP_ZONE=#{domain}
+DOMAINUP_NAME=$HOSTNAME
+DOMAINUP_IFACE=eth1
+" > /etc/default/domainup
+
+systemctl daemon-reload
+systemctl enable domainup
+
+# Starting for the first time
+service domainup start
+
