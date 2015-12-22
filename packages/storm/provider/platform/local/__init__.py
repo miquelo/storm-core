@@ -23,9 +23,9 @@ class Platform:
 		
 	def configure(self, context):
 	
-		pass
+		context.progress(1.)
 		
 	def destroy(self, context):
 	
-		pass
+		context.progress(1.)
 
