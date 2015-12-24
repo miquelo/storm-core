@@ -23,5 +23,5 @@ class Platform:
 		
 	def destroy(self, context):
 	
-		context.progress(1.)
+		pass
 
