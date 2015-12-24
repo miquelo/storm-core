@@ -17,7 +17,7 @@
 
 class Platform:
 
-	def __init__(self, data_res, props):
+	def __init__(self, base_res, props):
 	
 		pass
 		
