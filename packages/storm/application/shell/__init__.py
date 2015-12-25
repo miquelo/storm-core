@@ -284,6 +284,35 @@ def command_execute_dismiss(data_res, printer_fact, arguments):
 	command_engine_execute(data_res, init_fn, event_fn)
 	
 #
+# Command WATCH
+#
+def command_execute_watch(data_res, printer_fact, arguments):
+
+	# Parse arguments
+	parser = command_parser("watch")
+	parser.add_argument(
+		"platform_name",
+		metavar="platform",
+		type=str,
+		nargs=1,
+		help=messages["argument"]["platform"]
+	)
+	args = parser.parse_args(arguments)
+	
+	# Init function
+	def init_fn(eng):
+	
+		name = args.platform_name[0]
+		return eng.watch(name)
+		
+	# Event function
+	def event_fn(eng, task, name, value):
+	
+		pass
+		
+	command_engine_execute(data_res, init_fn, event_fn)
+	
+#
 # Create parser for command
 #
 def command_parser(cmd_name):
