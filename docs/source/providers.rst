@@ -5,6 +5,5 @@ Providers
    :maxdepth: 4
    
    providers.platform
-   providers.resource
-   providers.storage
+   providers.reshandler
 
