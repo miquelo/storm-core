@@ -15,7 +15,8 @@
 # along with STORM-CORE.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from storm.provider.platform.local import docker
+from storm.provider.platform.tropos.vmm import vbox
+from storm.provider.platform.tropos.cm import docker
 
 class Platform:
 
